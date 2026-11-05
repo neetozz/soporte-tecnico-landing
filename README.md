@@ -37,8 +37,11 @@ El archivo `package-lock.json` fija las dependencias. Para reproducir la instala
 ## Funciones
 
 - Navegación por secciones, menú móvil y enlace para volver al inicio.
-- Computadora interactiva con tres síntomas ilustrativos, selección exclusiva, explicación y enlace al servicio relacionado.
-- Conexiones independientes por identificador, alineadas mediante las posiciones de tarjetas y monitor. En celular se ocultan para evitar ambigüedad.
+- Conjunto SVG propio con monitor, torre translúcida, ventilador, RAM, almacenamiento SSD y router. Tres síntomas destacan las piezas relacionadas y muestran una explicación y acceso al servicio.
+- Modo «Ver componentes» con botones de selección accesibles. El ventilador y la señal tienen animaciones breves, sin ciclos continuos y desactivadas con movimiento reducido.
+- Conexiones independientes por identificador, alineadas con cada control mediante sus posiciones reales. En celular se ocultan para evitar ambigüedad.
+- «Explorar mi problema» abre un diálogo modal: síntoma, dos preguntas y resumen basado en reglas locales. Permite retroceder, cambiar respuestas, reiniciar y cerrar con Escape, restaurando el foco.
+- Al continuar al contacto, se selecciona el servicio; el resumen se agrega únicamente si el usuario marca la casilla, conservando el texto existente. No se añade dos veces el mismo resumen.
 - Servicios con ilustraciones ligeras y etiquetas informativas separadas por puntos. Sus enlaces seleccionan el servicio en el formulario sin borrar nombre ni mensaje.
 - Preguntas desplegables y formulario con validación nativa y confirmación local accesible.
 - Respuestas visuales al foco y al cursor, y respeto por movimiento reducido.
@@ -46,9 +49,15 @@ El archivo `package-lock.json` fija las dependencias. Para reproducir la instala
 ## Estructura
 
 - `src/main.jsx`: contenido, navegación móvil, servicios, preguntas y formulario.
-- `src/SystemVisual.jsx`: monitor interactivo con tres opciones: Está lenta, Se calienta y Se corta el Wi-Fi. Destacan la parte relacionada, anuncian una explicación ilustrativa y enlazan al servicio correspondiente. Funcionan con Tab, Enter, Espacio y toque; no ejecutan diagnósticos.
+- `src/SystemVisual.jsx`: controles de síntomas y exploración de componentes.
+- `src/ComputerScene.jsx`: ilustración original, conexiones y selección de piezas.
+- `src/OrientationDialog.jsx`: recorrido modal y navegación entre sus pasos.
+- `src/orientation.js`: preguntas y reglas puras de orientación. Las dos respuestas afectan las recomendaciones; solo se sugieren mejoras para una lentitud ubicada y con espacio disponible. En otros casos se propone una revisión inicial. El calor remite a mantenimiento y los cortes a configuración de redes.
+- `src/panelModes.js`: textos y servicios asociados a cada síntoma del panel.
+- `tests/orientation.test.js`: cobertura de las 27 combinaciones válidas, respuestas desconocidas, selección de servicios y rechazo de entradas incompletas o inválidas.
 - `src/Hardware.jsx`: ilustraciones SVG originales de ventilador, SSD, RAM y router, sin dependencias gráficas.
 - `src/styles.css`: estilos, diseño adaptable y preferencias de movimiento reducido.
+- `src/workstation.css`: escena, controles y diálogo; conserva la dirección visual de la landing.
 - `public/favicon.svg`: símbolo provisional de Nodo.
 - `index.html`: idioma, título y metadatos.
 
@@ -76,5 +85,12 @@ El formulario usa validación nativa y muestra una confirmación en la página q
 HTML semántico, enlace para saltar al contenido, etiquetas de formulario, foco visible, preguntas nativas con `details`, menú con estado expandido y confirmación con `role="status"`. El CSS respeta `prefers-reduced-motion`. Diseño adaptable a móvil y escritorio, sin recursos gráficos pesados.
 
 ## Verificación de la entrega
+
+```sh
+npm test
+npm run build
+```
+
+Las reglas del recorrido no acceden a sensores, procesos, archivos ni conexiones del dispositivo. Los resultados organizan una consulta de ejemplo y no afirman una falla ni reemplazan una revisión técnica.
 
 Compilación con `npm run build` y revisión real en navegador Chromium/Edge a 360, 390, 768 y 1440 px. Comprobaciones de desbordamiento, panel y enlaces, navegación móvil, preguntas, validación y confirmación sin solicitudes de formulario ni almacenamiento, foco de teclado y movimiento reducido. Esta revisión no equivale a una certificación de accesibilidad ni a pruebas en todos los dispositivos o lectores de pantalla.

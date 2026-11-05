@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
+import './workstation.css';
 import Hardware from './Hardware';
 import SystemVisual from './SystemVisual';
 
@@ -23,6 +24,14 @@ const faqs = [
 function App() {
   const [menu, setMenu] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState('');
+  const continueToContact = (label, summary) => {
+    setService(label);
+    setSubmitted(false);
+    if (summary) setMessage(previous => previous.includes(summary) ? previous : [previous, summary].filter(Boolean).join('\n\n'));
+    window.location.hash = 'contacto';
+    requestAnimationFrame(() => document.getElementById('message')?.focus({ preventScroll: true }));
+  };
   const [service, setService] = useState('No estoy seguro todavía');
   return <>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
@@ -36,7 +45,7 @@ function App() {
         <h1>Que la tecnología<br />vuelva a <span>fluir.</span></h1>
         <p className="hero-copy">Si tu computadora tarda en arrancar, se calienta o el Wi-Fi se corta,<br className="desktop-break" /> revisamos la causa y te explicamos qué se puede hacer.</p>
         <div className="hero-actions"><a className="button primary" href="#contacto">Contanos qué pasa <Arrow /></a><a className="text-link" href="#servicios">Explorar servicios <span aria-hidden="true">↓</span></a></div>
-        <SystemVisual mark={<Mark />} />
+        <SystemVisual onContact={continueToContact} />
         <div className="principles"><span>Diagnóstico antes de actuar</span><span>Explicaciones sin tecnicismos</span><span>Vos decidís el siguiente paso</span></div>
       </section>
       <section className="services wrap section" id="servicios"><div className="section-intro"><span className="eyebrow"><NodeSymbol />LO QUE HACEMOS</span><h2>¿Qué está fallando?</h2><p>Tres áreas de soporte para tu computadora y tu red.<br />Contanos qué notás, aunque no sepas la causa.</p></div>
@@ -48,7 +57,7 @@ function App() {
         <form className="contact-form" onSubmit={e => { e.preventDefault(); setSubmitted(true); }} onChange={() => setSubmitted(false)}>
           <label htmlFor="name">¿Cómo te llamás?</label><input id="name" name="name" placeholder="Un nombre de ejemplo" required maxLength={80} autoComplete="off" />
           <label htmlFor="service">¿En qué podemos ayudarte?</label><select id="service" value={service} onChange={e => setService(e.target.value)}><option>No estoy seguro todavía</option>{services.map(s => <option key={s.id}>{s.label}</option>)}</select>
-          <label htmlFor="message">Contanos qué sucede</label><textarea id="message" name="message" rows="3" placeholder="Por ejemplo: mi computadora tarda mucho en encender…" required maxLength={2000} />
+          <label htmlFor="message">Contanos qué sucede</label><textarea id="message" name="message" value={message} onChange={event => setMessage(event.target.value)} rows="3" placeholder="Por ejemplo: mi computadora tarda mucho en encender…" required maxLength={Math.max(2000, message.length)} />
           <button className="button primary" type="submit">Probar consulta <Arrow /></button><p className="form-caption">Modo demostración · Sin envío de mensajes</p><div className="form-status" role="status">{submitted && 'Listo: así se vería la confirmación de tu consulta. No se envió ni se guardó ningún dato.'}</div>
         </form>
       </section>

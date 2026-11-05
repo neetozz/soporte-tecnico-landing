@@ -1,61 +1,32 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
-import Hardware from './Hardware';
+import React, { useRef, useState } from 'react';
+import ComputerScene from './ComputerScene';
+import OrientationDialog from './OrientationDialog';
+import { modes } from './panelModes';
 
-const modes = [
-  { id: 'performance', className: 'storage', hardware: 'ssd', title: 'Está lenta', part: 'SSD + RAM', screen: 'Almacenamiento + memoria', text: 'Un arranque lento o programas que se traban pueden tener distintas causas. Revisamos el disco, la memoria y lo que carga al iniciar antes de sugerir una mejora.', href: '#mejoras', link: 'Ver mejoras SSD y RAM' },
-  { id: 'cooling', className: 'cooling', hardware: 'fan', title: 'Se calienta', part: 'VENTILACIÓN', screen: 'Ventilación + limpieza', text: 'El polvo o una ventilación obstruida pueden elevar la temperatura. Revisamos el flujo de aire y el sistema de enfriamiento para definir el mantenimiento.', href: '#mantenimiento', link: 'Ver mantenimiento' },
-  { id: 'network', className: 'network', hardware: 'router', title: 'Se corta el Wi-Fi', part: 'ROUTER + RED', screen: 'Router + cobertura', text: 'Los cortes pueden venir de la señal, del router o del proveedor. Revisamos la cobertura y la configuración para acotar dónde está el problema.', href: '#wifi', link: 'Ver configuración de redes' },
+const pieces = [
+  { id: 'storage', title: 'Almacenamiento SSD', short: 'SSD', text: 'Guarda el sistema, los programas y tus archivos. Un SSD compatible puede reducir la espera al encender o abrir programas.', href: '#mejoras', link: 'Ver mejoras SSD y RAM' },
+  { id: 'ram', title: 'Memoria RAM', short: 'RAM', text: 'Mantiene a mano lo que estás usando. La cantidad necesaria depende de tus programas y de cuántos abrís a la vez.', href: '#mejoras', link: 'Ver mejoras SSD y RAM' },
+  { id: 'fan', title: 'Ventilación', short: 'Ventilación', text: 'El ventilador mueve aire para disipar el calor. Revisamos que pueda girar y que las entradas y salidas no estén obstruidas.', href: '#mantenimiento', link: 'Ver mantenimiento' },
+  { id: 'router', title: 'Router Wi-Fi', short: 'Router', text: 'Conecta tus dispositivos a la red. Su ubicación, la configuración y los obstáculos influyen en la cobertura.', href: '#wifi', link: 'Ver configuración de redes' },
 ];
 
-export default function SystemVisual({ mark }) {
+export default function SystemVisual({ onContact }) {
   const [active, setActive] = useState(null);
-  const selected = modes.find(mode => mode.id === active);
-  const diagramRef = useRef(null);
-  const screenRef = useRef(null);
-  const buttonRefs = useRef({});
-  const [connections, setConnections] = useState({});
-  useLayoutEffect(() => {
-    const diagram = diagramRef.current;
-    const update = () => {
-      const origin = diagram.getBoundingClientRect();
-      const screen = screenRef.current.getBoundingClientRect();
-      const next = {};
-      for (const mode of modes) {
-        const card = buttonRefs.current[mode.id].getBoundingClientRect();
-        const fromRight = mode.id !== 'network';
-        const x1 = (fromRight ? card.right : card.left) - origin.left;
-        const y1 = card.top + card.height / 2 - origin.top;
-        const x2 = (fromRight ? screen.left : screen.right) - origin.left;
-        const screenAnchor = { performance: 0.3, cooling: 0.78, network: 0.5 }[mode.id];
-        const y2 = screen.top + screen.height * screenAnchor - origin.top;
-        const bend = x1 + (x2 - x1) / 2;
-        next[mode.id] = { path: `M ${x1} ${y1} H ${bend} V ${y2} H ${x2}`, x: x1 + (x2 - x1) * 0.22, y: y1 };
-      }
-      setConnections(next);
-    };
-    const observer = new ResizeObserver(update);
-    [diagram, screenRef.current, ...Object.values(buttonRefs.current)].forEach(element => observer.observe(element));
-    update();
-    return () => observer.disconnect();
-  }, []);
-  return <div className={`system-visual symptom-panel ${active ? `highlight-${active}` : ''}`} role="group" aria-label="Orientación ilustrativa sobre tu computadora y tu red" aria-describedby="orientation-note">
-    <div className="visual-top"><span><i /> COMPUTADORA + RED</span><span>¿QUÉ NOTÁS EN TU EQUIPO?</span></div>
-    <div className="diagram" ref={diagramRef}>
-      <svg className="panel-connections" aria-hidden="true">
-        {modes.map(mode => connections[mode.id] && <g key={mode.id} id={`connection-${mode.id}`} data-mode={mode.id} data-active={active === mode.id} className="panel-wire">
-          <path d={connections[mode.id].path} />
-          <circle cx={connections[mode.id].x} cy={connections[mode.id].y} r="2.3" />
-        </g>)}
-      </svg>
-      {modes.map(mode => <button key={mode.id} id={`option-${mode.id}`} data-mode={mode.id} ref={element => { buttonRefs.current[mode.id] = element; }} type="button" className={`satellite ${mode.className}`} aria-label={mode.title} aria-pressed={active === mode.id} aria-controls="system-explanation" onClick={() => setActive(mode.id)}><Hardware type={mode.hardware} /><span>{mode.title}<small>{mode.part}</small></span></button>)}
-      <div className="computer" aria-hidden="true"><div className="screen" ref={screenRef} data-mode={active || undefined}>{mark}<span>{selected ? selected.screen : 'Tu equipo, por dentro.'}</span><div className="screen-lines"><i /><i /><i /></div></div><div className="stand" /><div className="base" /></div>
+  const [view, setView] = useState('symptoms');
+  const [piece, setPiece] = useState('storage');
+  const controls = useRef({});
+  const componentToggle = useRef(null);
+  const mode = modes.find(item => item.id === active);
+  const selected = view === 'components' ? pieces.find(item => item.id === piece) : mode;
+  const highlighted = view === 'components' ? piece : { performance: 'performance', cooling: 'fan', network: 'router' }[active];
+  const screen = view === 'components' ? selected.title : mode?.screen || 'Tu equipo, por dentro.';
+  return <div className="system-visual workstation" role="group" aria-label="Explorá tu computadora y tu red" aria-describedby="orientation-note" onKeyDown={event => { if (event.key === 'Escape' && view === 'components' && !event.target.closest('dialog')) { setView('symptoms'); componentToggle.current?.focus(); } }}>
+    <div className="workstation-top"><span className="eyebrow"><span className="status-dot" /> COMPUTADORA + RED</span><button ref={componentToggle} className="quiet-button component-toggle" aria-expanded={view === 'components'} aria-controls="exploration-controls" onClick={() => setView(view === 'symptoms' ? 'components' : 'symptoms')}>{view === 'components' ? 'Volver a síntomas' : 'Ver componentes'} <span aria-hidden="true">{view === 'components' ? '−' : '+'}</span></button></div>
+    <div id="exploration-controls" className={`exploration-controls ${view}`} aria-label={view === 'symptoms' ? 'Elegí un síntoma' : 'Elegí un componente'} role="group">
+      {view === 'symptoms' ? modes.map(item => <button key={item.id} ref={element => { controls.current[item.id] = element; }} id={`option-${item.id}`} aria-pressed={active === item.id} aria-controls="system-explanation" onClick={() => setActive(item.id)}>{item.title}</button>) : pieces.map(item => <button key={item.id} id={`piece-${item.id}`} aria-pressed={piece === item.id} aria-controls="system-explanation" onClick={() => setPiece(item.id)}>{item.short}</button>)}
     </div>
-    <div className="visual-explanation" id="system-explanation">
-      <span className="explanation-label"><span className="status-dot" />{selected ? selected.title : 'Elegí qué sucede'}</span>
-      <div><p role="status" aria-live="polite" aria-atomic="true">{selected ? selected.text : 'Elegí una de las tres opciones para conocer qué partes revisaríamos y encontrar el servicio relacionado.'}</p>
-        {selected && <a className="orientation-link text-link" href={selected.href}>{selected.link} <span aria-hidden="true">↗</span></a>}
-      </div>
-    </div>
-    <p className="orientation-note" id="orientation-note">Ejemplo ilustrativo de los servicios</p>
+    <ComputerScene selected={highlighted} symptom={active} components={view === 'components'} screen={screen} controls={controls} />
+    <div className="visual-explanation" id="system-explanation"><span className="explanation-label"><span className="status-dot" />{selected?.title || 'Tu equipo, por dentro'}</span><div><p role="status" aria-live="polite" aria-atomic="true">{selected?.text || 'Elegí qué notás o explorá las piezas de la torre y el router. Es una ilustración, no una lectura de tu equipo.'}</p>{selected && <a className="orientation-link text-link" href={selected.href}>{selected.link} <span aria-hidden="true">↗</span></a>}</div></div>
+    <div className="workstation-bottom"><p className="orientation-note" id="orientation-note">Ejemplo ilustrativo de los servicios</p><OrientationDialog onContact={onContact} /></div>
   </div>;
 }

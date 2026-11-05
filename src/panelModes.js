@@ -1,0 +1,5 @@
+export const modes = [
+  { id: 'performance', className: 'storage', hardware: 'ssd', title: 'Está lenta', part: 'SSD + RAM', screen: 'Almacenamiento + memoria', text: 'Un arranque lento o programas que se traban pueden tener distintas causas. Revisamos el disco, la memoria y lo que carga al iniciar antes de sugerir una mejora.', href: '#mejoras', link: 'Ver mejoras SSD y RAM' },
+  { id: 'cooling', className: 'cooling', hardware: 'fan', title: 'Se calienta', part: 'VENTILACIÓN', screen: 'Ventilación + limpieza', text: 'El polvo o una ventilación obstruida pueden elevar la temperatura. Revisamos el flujo de aire y el sistema de enfriamiento para definir el mantenimiento.', href: '#mantenimiento', link: 'Ver mantenimiento' },
+  { id: 'network', className: 'network', hardware: 'router', title: 'Se corta el Wi-Fi', part: 'ROUTER + RED', screen: 'Router + cobertura', text: 'Los cortes pueden venir de la señal, del router o del proveedor. Revisamos la cobertura y la configuración para acotar dónde está el problema.', href: '#wifi', link: 'Ver configuración de redes' },
+];
